@@ -17,7 +17,7 @@ PROVIDER_ICON=""
 PR_COUNT=0
 REVIEW_COUNT=0
 ISSUE_COUNT=0
-BUG_COUNT=0
+BUG_COUNT=0@tokyo-night-tmux_assigned_issues_only
 
 PR_STATUS=""
 REVIEW_STATUS=""
@@ -35,10 +35,21 @@ if [[ $PROVIDER == "github.com" ]]; then
   PROVIDER_ICON="$RESET#[fg=${THEME[foreground]}] "
   PR_COUNT=$(gh pr list --json number --jq 'length' | bc)
   REVIEW_COUNT=$(gh pr status --json reviewRequests --jq '.needsReview | length' | bc)
-  RES=$(gh issue list --json "assignees,labels" --assignee @me)
+
+  # ▼ new option: show assigned-only vs. all issues (default = all)
+  SHOW_ASSIGNED=$(tmux show-option -gv @tokyo-night-tmux_assigned_issues_only)
+  
+  if [ "$SHOW_ASSIGNED" = "1" ]; then
+    RES=$(gh issue list --json "assignees,labels" --assignee @me)
+  else
+    RES=$(gh issue list --json "number,labels")
+  fi
+  
   ISSUE_COUNT=$(echo "$RES" | jq 'length' | bc)
   BUG_COUNT=$(echo "$RES" | jq 'map(select(.labels[].name == "bug")) | length' | bc)
   ISSUE_COUNT=$((ISSUE_COUNT - BUG_COUNT))
+  # ▲ end option
+
 elif [[ $PROVIDER == "gitlab.com" ]]; then
   if ! command -v glab &>/dev/null; then
     exit 1
