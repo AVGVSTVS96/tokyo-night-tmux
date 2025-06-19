@@ -17,7 +17,7 @@ PROVIDER_ICON=""
 PR_COUNT=0
 REVIEW_COUNT=0
 ISSUE_COUNT=0
-BUG_COUNT=0@tokyo-night-tmux_assigned_issues_only
+BUG_COUNT=0
 
 PR_STATUS=""
 REVIEW_STATUS=""
@@ -36,19 +36,24 @@ if [[ $PROVIDER == "github.com" ]]; then
   PR_COUNT=$(gh pr list --json number --jq 'length' | bc)
   REVIEW_COUNT=$(gh pr status --json reviewRequests --jq '.needsReview | length' | bc)
 
-  # ▼ new option: show assigned-only vs. all issues (default = all)
+  # Fetch issues - since gh issue list doesn't support type field yet,
+  # we use gh api to get both labels and types
   SHOW_ASSIGNED=$(tmux show-option -gv @tokyo-night-tmux_assigned_issues_only)
   
+  # Build API query
   if [ "$SHOW_ASSIGNED" = "1" ]; then
-    RES=$(gh issue list --json "assignees,labels" --assignee @me)
+    QUERY="assignee=$(gh api user -q .login)&state=open&per_page=100"
   else
-    RES=$(gh issue list --json "number,labels")
+    QUERY="state=open&per_page=100"
   fi
   
+  # Fetch issues with labels and type fields
+  RES=$(gh api "repos/{owner}/{repo}/issues?$QUERY" | jq '[.[] | {labels, type}]')
+  
+  # Count total issues and bugs (supporting both labels and issue types)
   ISSUE_COUNT=$(echo "$RES" | jq 'length' | bc)
-  BUG_COUNT=$(echo "$RES" | jq 'map(select(.labels[].name == "bug")) | length' | bc)
+  BUG_COUNT=$(echo "$RES" | jq 'map(select((.labels | map(.name) | contains(["bug"])) or .type.name == "Bug")) | length' | bc)
   ISSUE_COUNT=$((ISSUE_COUNT - BUG_COUNT))
-  # ▲ end option
 
 elif [[ $PROVIDER == "gitlab.com" ]]; then
   if ! command -v glab &>/dev/null; then
