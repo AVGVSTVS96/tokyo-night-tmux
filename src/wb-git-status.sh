@@ -48,7 +48,7 @@ if [[ $PROVIDER == "github.com" ]]; then
   fi
   
   # Fetch issues with labels and type fields
-  RES=$(gh api "repos/{owner}/{repo}/issues?$QUERY" | jq '[.[] | {labels, type}]')
+  RES=$(gh api "repos/{owner}/{repo}/issues?$QUERY" | jq '[.[] | select(.pull_request == null) | {labels, type}]')
   
   # Count total issues and bugs (supporting both labels and issue types)
   ISSUE_COUNT=$(echo "$RES" | jq 'length' | bc)
