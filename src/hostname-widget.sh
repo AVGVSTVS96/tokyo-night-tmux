@@ -6,7 +6,7 @@
 # shell for it on redraw.
 
 SHOW_WIDGET="$(tmux show-option -gqv @tokyo-night-tmux_show_hostname 2>/dev/null || true)"
-[ "$SHOW_WIDGET" = "0" ] && exit 0
+[ "$SHOW_WIDGET" = "1" ] || exit 0
 
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=src/themes.sh
