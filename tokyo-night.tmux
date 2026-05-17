@@ -66,7 +66,9 @@ zoom_number="$(number_format "#{pane_index}" "$zoom_id_style")"
 date_and_time="$($SCRIPTS_PATH/datetime-widget.sh)"
 current_path="#($SCRIPTS_PATH/path-widget.sh #{pane_current_path})"
 battery_status="#($SCRIPTS_PATH/battery-widget.sh)"
-hostname="#($SCRIPTS_PATH/hostname-widget.sh)"
+# Resolved once at plugin load via $(...) — the captured string is embedded
+# directly into status-left, so tmux never forks a shell for it on redraw.
+hostname="$($SCRIPTS_PATH/hostname-widget.sh)"
 
 #+--- Bars LEFT ---+
 # Session name
