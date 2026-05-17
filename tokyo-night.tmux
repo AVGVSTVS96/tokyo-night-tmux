@@ -10,7 +10,9 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_PATH="$CURRENT_DIR/src"
 
-source $SCRIPTS_PATH/themes.sh
+source "$SCRIPTS_PATH/themes.sh"
+# shellcheck source=lib/number-format.sh
+source "$CURRENT_DIR/lib/number-format.sh"
 
 tmux set -g status-left-length 80
 tmux set -g status-right-length 150
@@ -58,10 +60,10 @@ netspeed="#($SCRIPTS_PATH/netspeed.sh)"
 cmus_status="#($SCRIPTS_PATH/music-tmux-statusbar.sh)"
 git_status="#($SCRIPTS_PATH/git-status.sh #{pane_current_path})"
 wb_git_status="#($SCRIPTS_PATH/wb-git-status.sh #{pane_current_path} &)"
-window_number="#($SCRIPTS_PATH/custom-number.sh #I $window_id_style)"
-custom_pane="#($SCRIPTS_PATH/custom-number.sh #P $pane_id_style)"
-zoom_number="#($SCRIPTS_PATH/custom-number.sh #P $zoom_id_style)"
-date_and_time="#($SCRIPTS_PATH/datetime-widget.sh)"
+window_number="$(number_format "#{window_index}" "$window_id_style")"
+custom_pane="$(number_format "#{pane_index}" "$pane_id_style")"
+zoom_number="$(number_format "#{pane_index}" "$zoom_id_style")"
+date_and_time="$($SCRIPTS_PATH/datetime-widget.sh)"
 current_path="#($SCRIPTS_PATH/path-widget.sh #{pane_current_path})"
 battery_status="#($SCRIPTS_PATH/battery-widget.sh)"
 hostname="#($SCRIPTS_PATH/hostname-widget.sh)"
