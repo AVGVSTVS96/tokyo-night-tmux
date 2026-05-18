@@ -46,6 +46,27 @@ fi
 cd "$ROOT" || exit 0
 
 RESET="#[fg=${THEME[foreground]},bg=${THEME[background]},nobold,noitalics,nounderscore,nodim]"
+
+_tmux_option_or_default() {
+  local option="$1" default="$2" value
+  value="$(tmux show-option -gqv "$option" 2>/dev/null || true)"
+  if [ -n "$value" ]; then
+    printf '%s' "$value"
+  else
+    printf '%s' "$default"
+  fi
+}
+
+GIT_CHANGED_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_changed_icon "")"
+GIT_INSERTIONS_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_insertions_icon "")"
+GIT_DELETIONS_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_deletions_icon "")"
+GIT_UNTRACKED_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_untracked_icon "")"
+GIT_DIRTY_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_dirty_icon "󱓎")"
+GIT_PUSH_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_push_icon "󰛃")"
+GIT_PULL_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_pull_icon "󰛀")"
+GIT_CLEAN_ICON="$(_tmux_option_or_default @tokyo-night-tmux_git_clean_icon "")"
+GIT_SYNC_MARKER="$(_tmux_option_or_default @tokyo-night-tmux_git_sync_marker "▒")"
+
 BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
 if [ -z "$BRANCH" ]; then
   : | _sc_write "$CACHE"
@@ -86,19 +107,19 @@ UNTRACKED_COUNT="$(git ls-files --other --exclude-standard 2>/dev/null | wc -l |
 UNTRACKED_COUNT="${UNTRACKED_COUNT:-0}"
 
 if [[ $CHANGED_COUNT -gt 0 ]]; then
-  STATUS_CHANGED="${RESET}#[fg=${THEME[yellow]},bg=${THEME[background]},bold]󰦓 ${CHANGED_COUNT} "
+  STATUS_CHANGED="${RESET}#[fg=${THEME[yellow]},bg=${THEME[background]},bold]${GIT_CHANGED_ICON} ${CHANGED_COUNT} "
 fi
 
 if [[ $INSERTIONS_COUNT -gt 0 ]]; then
-  STATUS_INSERTIONS="${RESET}#[fg=${THEME[green]},bg=${THEME[background]},bold]󰐖 ${INSERTIONS_COUNT} "
+  STATUS_INSERTIONS="${RESET}#[fg=${THEME[green]},bg=${THEME[background]},bold]${GIT_INSERTIONS_ICON} ${INSERTIONS_COUNT} "
 fi
 
 if [[ $DELETIONS_COUNT -gt 0 ]]; then
-  STATUS_DELETIONS="${RESET}#[fg=${THEME[red]},bg=${THEME[background]},bold]󰍵 ${DELETIONS_COUNT} "
+  STATUS_DELETIONS="${RESET}#[fg=${THEME[red]},bg=${THEME[background]},bold]${GIT_DELETIONS_ICON} ${DELETIONS_COUNT} "
 fi
 
 if [[ $UNTRACKED_COUNT -gt 0 ]]; then
-  STATUS_UNTRACKED="${RESET}#[fg=${THEME[black]},bg=${THEME[background]},bold]󰋗 ${UNTRACKED_COUNT} "
+  STATUS_UNTRACKED="${RESET}#[fg=${THEME[black]},bg=${THEME[background]},bold]${GIT_UNTRACKED_ICON} ${UNTRACKED_COUNT} "
 fi
 
 # Run `git fetch` at most once per FETCH_TTL seconds. Network I/O — only
@@ -134,20 +155,20 @@ if [[ $SYNC_MODE -eq 0 ]]; then
   fi
 fi
 
-# Status indicator: a colored "▒" block plus a sync-state nerd-font glyph.
-# Colors and glyphs match the original upstream theme exactly.
+# Status indicator: a colored marker plus a sync-state nerd-font glyph.
+# Glyphs can be overridden from tmux.conf with @tokyo-night-tmux_git_* options.
 case "$SYNC_MODE" in
 1)
-  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[bred]},bold]▒ 󱓎"
+  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[bred]},bold]${GIT_SYNC_MARKER} ${GIT_DIRTY_ICON}"
   ;;
 2)
-  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[red]},bold]▒ 󰛃"
+  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[red]},bold]${GIT_SYNC_MARKER} ${GIT_PUSH_ICON}"
   ;;
 3)
-  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[magenta]},bold]▒ 󰛀"
+  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[magenta]},bold]${GIT_SYNC_MARKER} ${GIT_PULL_ICON}"
   ;;
 *)
-  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[green]},bold]▒ "
+  REMOTE_STATUS="$RESET#[bg=${THEME[background]},fg=${THEME[green]},bold]${GIT_SYNC_MARKER} ${GIT_CLEAN_ICON}"
   ;;
 esac
 
